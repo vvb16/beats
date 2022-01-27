@@ -603,6 +603,29 @@ func PackageTarGz(spec PackageSpec) error {
 	w := tar.NewWriter(buf)
 	baseDir := spec.rootDir()
 
+	// TODO: filter out the universal beats
+	// Add darwin/arm64 and darwin/amd64 to the darwin/universal package
+	if spec.Name == "elastic-agent" && spec.OS == "darwin" && spec.Arch == "universal" {
+		newFiles := map[string]PackageFile{}
+		for filename, pkgFile := range spec.Files {
+			// Replace the darwin-universal by darwin-x86_64 and darwin-arm64 and
+			// keep the other files.
+			if strings.Contains(pkgFile.Target, "darwin-universal") &&
+				strings.Contains(pkgFile.Target, "downloads") {
+
+				amdFilename, amdpkgFile := replaceFileArch(filename, pkgFile, "x86_64")
+				armFilename, armpkgFile := replaceFileArch(filename, pkgFile, "arm64")
+
+				newFiles[amdFilename] = amdpkgFile
+				newFiles[armFilename] = armpkgFile
+			} else {
+				newFiles[filename] = pkgFile
+			}
+		}
+
+	}
+
+	// here add more files
 	// Add files to tar.
 	for _, pkgFile := range spec.Files {
 		if pkgFile.Symlink {
@@ -671,6 +694,14 @@ func PackageTarGz(spec PackageSpec) error {
 	}
 
 	return errors.Wrap(CreateSHA512File(spec.OutputFile), "failed to create .sha512 file")
+}
+
+func replaceFileArch(filename string, pkgFile PackageFile, arch string) (string, PackageFile) {
+	filename = strings.ReplaceAll(filename, "universal", arch)
+	pkgFile.Source = strings.ReplaceAll(pkgFile.Source, "universal", arch)
+	pkgFile.Target = strings.ReplaceAll(pkgFile.Target, "universal", arch)
+
+	return filename, pkgFile
 }
 
 // PackageDeb packages a deb file. This requires Docker to execute FPM.

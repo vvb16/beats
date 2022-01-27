@@ -46,6 +46,11 @@ var Platforms = BuildPlatforms.Defaults()
 // SelectedPackageTypes is the list of package types
 var SelectedPackageTypes []PackageType
 
+// DarwinUniversal indicates whether ot not the darwin/universal should be
+// assembled. If both darwin/adm64 and darwin/arm64 are built, then DarwinUniversal
+// is true. It's set by the init function.
+var DarwinUniversal bool
+
 func init() {
 	// Allow overriding via PLATFORMS.
 	if expression := os.Getenv("PLATFORMS"); len(expression) > 0 {
@@ -63,6 +68,17 @@ func init() {
 			SelectedPackageTypes = append(SelectedPackageTypes, p)
 		}
 	}
+
+	var darwinAMD64, darwinARM64 bool
+	for _, p := range Platforms {
+		if p.Name == "darwin/arm64" {
+			darwinARM64 = true
+		}
+		if p.Name == "darwin/amd64" {
+			darwinAMD64 = true
+		}
+	}
+	DarwinUniversal = darwinAMD64 && darwinARM64
 }
 
 // CrossBuildOption defines an option to the CrossBuild target.
