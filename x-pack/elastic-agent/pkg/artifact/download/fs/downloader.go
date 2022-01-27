@@ -10,7 +10,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/elastic/beats/v7/x-pack/elastic-agent/pkg/agent/program"
 
@@ -75,11 +74,6 @@ func (e *Downloader) download(operatingSystem string, spec program.Spec, version
 	return e.downloadFile(filename, fullPath)
 }
 
-func (e *Downloader) tryDarwinUniversal(filename string) bool {
-	return strings.Contains(filename, "darwin-arm64") ||
-		strings.Contains(filename, "darwin-x86_64")
-}
-
 func (e *Downloader) downloadHash(operatingSystem string, spec program.Spec, version string) (string, error) {
 	filename, err := artifact.GetArtifactName(spec, version, operatingSystem, e.config.Arch())
 	if err != nil {
@@ -101,9 +95,7 @@ func (e *Downloader) downloadFile(filename, fullPath string) (string, error) {
 	sourcePath := filepath.Join(e.dropPath, filename)
 	sourceFile, err := os.Open(sourcePath)
 	if err != nil {
-		return "",
-			errors.New(err,
-				fmt.Sprintf("package '%s' not found", sourcePath), errors.TypeFilesystem, errors.M(errors.MetaKeyPath, fullPath))
+		return "", errors.New(err, fmt.Sprintf("package '%s' not found", sourcePath), errors.TypeFilesystem, errors.M(errors.MetaKeyPath, fullPath))
 	}
 	defer sourceFile.Close()
 

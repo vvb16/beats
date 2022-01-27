@@ -122,17 +122,7 @@ func Package() error {
 // updateWithDarwinUniversal checks if darwin/amd64 and darwin/arm64, are listed
 // if so, the universal binary was built, then we need to package it as well.
 func updateWithDarwinUniversal(platforms BuildPlatformList) BuildPlatformList {
-	var darwinAMD64, darwinARM64 bool
-	for _, p := range platforms {
-		if p.Name == "darwin/amd64" {
-			darwinAMD64 = true
-		}
-		if p.Name == "darwin/arm64" {
-			darwinARM64 = true
-		}
-	}
-
-	if darwinAMD64 && darwinARM64 {
+	if DarwinUniversal {
 		platforms = append(platforms,
 			BuildPlatform{
 				Name:  "darwin/universal",

@@ -222,17 +222,7 @@ func CrossBuild(options ...CrossBuildOption) error {
 // assembleDarwinUniversal checks if darwin/amd64 and darwin/arm64 were build,
 // if so, it generates a darwin/universal binary that is the merge fo them two.
 func assembleDarwinUniversal(params crossBuildParams) error {
-	var darwinAMD64, darwinARM64 bool
-	for _, p := range Platforms {
-		if p.Name == "darwin/amd64" {
-			darwinAMD64 = true
-		}
-		if p.Name == "darwin/arm64" {
-			darwinARM64 = true
-		}
-	}
-
-	if darwinAMD64 && darwinARM64 {
+	if DarwinUniversal {
 		builder := GolangCrossBuilder{
 			// the docker image for darwin/arm64 is the one capable of merging the binaries.
 			Platform:      "darwin/arm64",
