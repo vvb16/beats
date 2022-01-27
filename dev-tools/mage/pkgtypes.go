@@ -603,13 +603,11 @@ func PackageTarGz(spec PackageSpec) error {
 	w := tar.NewWriter(buf)
 	baseDir := spec.rootDir()
 
-	// TODO: filter out the universal beats
-	// Add darwin/arm64 and darwin/amd64 to the darwin/universal package
+	// Replace the darwin-universal by darwin-x86_64 and darwin-arm64 and
+	// keep the other files.
 	if spec.Name == "elastic-agent" && spec.OS == "darwin" && spec.Arch == "universal" {
 		newFiles := map[string]PackageFile{}
 		for filename, pkgFile := range spec.Files {
-			// Replace the darwin-universal by darwin-x86_64 and darwin-arm64 and
-			// keep the other files.
 			if strings.Contains(pkgFile.Target, "darwin-universal") &&
 				strings.Contains(pkgFile.Target, "downloads") {
 
@@ -625,7 +623,6 @@ func PackageTarGz(spec PackageSpec) error {
 
 	}
 
-	// here add more files
 	// Add files to tar.
 	for _, pkgFile := range spec.Files {
 		if pkgFile.Symlink {
