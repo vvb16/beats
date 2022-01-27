@@ -199,7 +199,7 @@ func CrossBuild(options ...CrossBuildOption) error {
 		builder := GolangCrossBuilder{buildPlatform.Name, params.Target, params.InDir, params.ImageSelector}
 		if params.Serial {
 			if err := builder.Build(); err != nil {
-				return errors.Wrapf(err, "failed cross-building target=%v for platform=%v",
+				return errors.Wrapf(err, "failed cross-building target=%s for platform=%s",
 					params.Target,
 					buildPlatform.Name)
 			}
@@ -378,8 +378,11 @@ func (b GolangCrossBuilder) Build() error {
 		"-v", repoInfo.RootDir+":"+mountPoint,
 		"-w", workDir,
 		image,
+
+		// Arguments for docker crossbuild entrypoint. For details see
+		// https://github.com/elastic/golang-crossbuild/blob/main/go1.17/base/rootfs/entrypoint.go.
 		"--build-cmd", buildCmd+" "+b.Target,
-		"-p", b.Platform,
+		"--platforms", b.Platform,
 	)
 
 	return dockerRun(args...)
