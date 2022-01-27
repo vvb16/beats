@@ -12,8 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-multierror"
-
 	"github.com/elastic/beats/v7/x-pack/elastic-agent/pkg/agent/program"
 
 	"github.com/elastic/beats/v7/x-pack/elastic-agent/pkg/agent/application/paths"
@@ -74,30 +72,7 @@ func (e *Downloader) download(operatingSystem string, spec program.Spec, version
 		return "", errors.New(err, "generating package path failed")
 	}
 
-	file, err := e.downloadFile(filename, fullPath)
-	// if it is either darwin/amd64 or darwin/arm64
-	if err != nil && e.tryDarwinUniversal(filename) {
-		filename, err = artifact.GetArtifactName(
-			spec, version, operatingSystem, "universal")
-		if err != nil {
-			return "", errors.New(err, "generating package name failed")
-		}
-
-		fullPath, err = artifact.GetArtifactPath(
-			spec, version, operatingSystem, "universal", e.config.TargetDirectory)
-		if err != nil {
-			return "", errors.New(err, "generating package path failed")
-		}
-
-		file2, err2 := e.downloadFile(filename, fullPath)
-		if err2 != nil {
-			err2 = multierror.Append(err, err2)
-		}
-
-		file, err = file2, err2
-	}
-
-	return file, err
+	return e.downloadFile(filename, fullPath)
 }
 
 func (e *Downloader) tryDarwinUniversal(filename string) bool {
@@ -119,30 +94,7 @@ func (e *Downloader) downloadHash(operatingSystem string, spec program.Spec, ver
 	filename = filename + ".sha512"
 	fullPath = fullPath + ".sha512"
 
-	file, err := e.downloadFile(filename, fullPath)
-	// if it is either darwin/amd64 or darwin/arm64
-	if err != nil && e.tryDarwinUniversal(filename) {
-		filename, err = artifact.GetArtifactName(
-			spec, version, operatingSystem, "universal")
-		if err != nil {
-			return "", errors.New(err, "generating package name failed")
-		}
-
-		fullPath, err = artifact.GetArtifactPath(
-			spec, version, operatingSystem, "universal", e.config.TargetDirectory)
-		if err != nil {
-			return "", errors.New(err, "generating package path failed")
-		}
-
-		file2, err2 := e.downloadFile(filename, fullPath)
-		if err2 != nil {
-			err2 = multierror.Append(err, err2)
-		}
-
-		file, err = file2, err2
-	}
-
-	return file, err
+	return e.downloadFile(filename, fullPath)
 }
 
 func (e *Downloader) downloadFile(filename, fullPath string) (string, error) {
@@ -151,8 +103,7 @@ func (e *Downloader) downloadFile(filename, fullPath string) (string, error) {
 	if err != nil {
 		return "",
 			errors.New(err,
-				fmt.Sprintf("package '%s' not found", sourcePath),
-				errors.TypeFilesystem, errors.M(errors.MetaKeyPath, fullPath))
+				fmt.Sprintf("package '%s' not found", sourcePath), errors.TypeFilesystem, errors.M(errors.MetaKeyPath, fullPath))
 	}
 	defer sourceFile.Close()
 
