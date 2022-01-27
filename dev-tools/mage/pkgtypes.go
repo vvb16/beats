@@ -621,6 +621,7 @@ func PackageTarGz(spec PackageSpec) error {
 			}
 		}
 
+		spec.Files = newFiles
 	}
 
 	// Add files to tar.
