@@ -28,8 +28,6 @@ import (
 	"github.com/pkg/errors"
 
 	devtools "github.com/elastic/beats/v7/dev-tools/mage"
-	"github.com/elastic/beats/v7/dev-tools/mage/target/build"
-
 	// mage:import
 	_ "github.com/elastic/beats/v7/dev-tools/mage/target/common"
 	// mage:import
@@ -360,7 +358,7 @@ func Build() {
 	mg.SerialDeps(CrossBuild, BuildContainer)
 }
 
-// GolangCrossBuild build the Beat binary inside of the golang-builder.
+// GolangCrossBuild build the Beat binary inside the golang-builder.
 // Do not use directly, use crossBuild instead.
 func GolangCrossBuild() error {
 	buildArgs := devtools.DefaultBuildArgs()
@@ -381,10 +379,6 @@ func Package() {
 	}
 
 	mg.SerialDeps(Build, Export)
-}
-
-func AssembleDarwinUniversal() error {
-	return build.AssembleDarwinUniversal()
 }
 
 func isSupportedPlatform() bool {
