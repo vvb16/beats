@@ -319,6 +319,7 @@ func (cm *Manager) toConfigBlocks(cfg common.MapStr) (ConfigBlocks, error) {
 	for _, regName := range cm.registry.GetRegisteredNames() {
 		iBlock, err := cfg.GetValue(regName)
 		if err != nil {
+			cm.logger.Errorf("failed to get '%s' value: %v", regName, err)
 			continue
 		}
 
