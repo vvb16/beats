@@ -45,6 +45,7 @@ type LineReader struct {
 	decoder    transform.Transformer
 	tempBuffer []byte
 	logger     *logp.Logger
+	zero       []byte
 }
 
 // NewLineReader creates a new reader object
@@ -55,6 +56,11 @@ func NewLineReader(input io.ReadCloser, config Config) (*LineReader, error) {
 	terminator, ok := lineTerminatorCharacters[config.Terminator]
 	if !ok {
 		return nil, fmt.Errorf("unknown line terminator: %+v", config.Terminator)
+	}
+
+	zero, _, err := transform.Bytes(encoder, lineTerminatorCharacters[NullTerminator])
+	if err != nil {
+		return nil, err
 	}
 
 	nl, _, err := transform.Bytes(encoder, terminator)
@@ -72,6 +78,7 @@ func NewLineReader(input io.ReadCloser, config Config) (*LineReader, error) {
 		outBuffer:  streambuf.New(nil),
 		tempBuffer: make([]byte, config.BufferSize),
 		logger:     logp.NewLogger("reader_line"),
+		zero:       zero,
 	}, nil
 }
 
@@ -130,6 +137,18 @@ func (r *LineReader) advance() error {
 	// Initial check if buffer has already a newLine character
 	idx := r.inBuffer.IndexFrom(r.inOffset, r.nl)
 
+	// Check if buffer has null character
+	idx_zero := r.inBuffer.IndexFrom(r.inOffset, r.zero)
+
+	// Check if null character before newLine
+	if idx_zero != -1 {
+		if idx == -1 {
+			return io.EOF
+		} else if idx > idx_zero {
+			return io.EOF
+		}
+	}
+
 	// Fill inBuffer until newline sequence has been found in input buffer
 	for idx == -1 {
 		// Increase search offset to reduce iterations on buffer when looping
@@ -161,6 +180,18 @@ func (r *LineReader) advance() error {
 		// Check if buffer has newLine character
 		idx = r.inBuffer.IndexFrom(r.inOffset, r.nl)
 
+		// Check if buffer has null character
+		idx_zero := r.inBuffer.IndexFrom(r.inOffset, r.zero)
+
+		// Check if null character before newLine
+		if idx_zero != -1 {
+			if idx == -1 {
+				return io.EOF
+			} else if idx > idx_zero {
+				return io.EOF
+			}
+		}
+
 		// If max bytes limit per line is set, then drop the lines that are longer
 		if r.maxBytes != 0 {
 			// If newLine is found, drop the lines longer than maxBytes
@@ -171,6 +202,18 @@ func (r *LineReader) advance() error {
 				r.inBuffer.Reset()
 				r.inOffset = 0
 				idx = r.inBuffer.IndexFrom(r.inOffset, r.nl)
+
+				// Check if buffer has null character
+				idx_zero := r.inBuffer.IndexFrom(r.inOffset, r.zero)
+
+				// Check if null character before newLine
+				if idx_zero != -1 {
+					if idx == -1 {
+						return io.EOF
+					} else if idx > idx_zero {
+						return io.EOF
+					}
+				}
 			}
 
 			// If newLine is not found and the incoming data buffer exceeded max bytes limit, then skip until the next newLine
@@ -183,6 +226,18 @@ func (r *LineReader) advance() error {
 				r.logger.Warnf("Exceeded %d max bytes in line limit, skipped %d bytes line", r.maxBytes, skipped)
 				r.byteCount += skipped
 				idx = r.inBuffer.IndexFrom(r.inOffset, r.nl)
+
+				// Check if buffer has null character
+				idx_zero := r.inBuffer.IndexFrom(r.inOffset, r.zero)
+
+				// Check if null character before newLine
+				if idx_zero != -1 {
+					if idx == -1 {
+						return io.EOF
+					} else if idx > idx_zero {
+						return io.EOF
+					}
+				}
 			}
 		}
 	}
@@ -232,6 +287,18 @@ func (r *LineReader) skipUntilNewLine() (int, error) {
 		// Check bytes read for newLine
 		if n > 0 {
 			idx = bytes.Index(r.tempBuffer[:n], r.nl)
+
+			// Check if buffer has null character
+			idx_zero := bytes.Index(r.tempBuffer[:n], r.zero)
+
+			// Check if null character before newLine
+			if idx_zero != -1 {
+				if idx == -1 {
+					return skipped, io.EOF
+				} else if idx > idx_zero {
+					return skipped, io.EOF
+				}
+			}
 
 			if idx != -1 {
 				r.inBuffer.Write(r.tempBuffer[idx+len(r.nl) : n])
