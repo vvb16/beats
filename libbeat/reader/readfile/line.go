@@ -143,8 +143,10 @@ func (r *LineReader) advance() error {
 	// Check if null character before newLine
 	if idx_zero != -1 {
 		if idx == -1 {
+			r.logger.Debug("Zero detected before newline")
 			return io.EOF
 		} else if idx > idx_zero {
+			r.logger.Debug("Zero detected before newline")
 			return io.EOF
 		}
 	}
@@ -186,8 +188,10 @@ func (r *LineReader) advance() error {
 		// Check if null character before newLine
 		if idx_zero != -1 {
 			if idx == -1 {
+				r.logger.Debug("Zero detected before newline")
 				return io.EOF
 			} else if idx > idx_zero {
+				r.logger.Debug("Zero detected before newline")
 				return io.EOF
 			}
 		}
@@ -209,8 +213,10 @@ func (r *LineReader) advance() error {
 				// Check if null character before newLine
 				if idx_zero != -1 {
 					if idx == -1 {
+						r.logger.Debug("Zero detected before newline")
 						return io.EOF
 					} else if idx > idx_zero {
+						r.logger.Debug("Zero detected before newline")
 						return io.EOF
 					}
 				}
@@ -233,8 +239,10 @@ func (r *LineReader) advance() error {
 				// Check if null character before newLine
 				if idx_zero != -1 {
 					if idx == -1 {
+						r.logger.Debug("Zero detected before newline")
 						return io.EOF
 					} else if idx > idx_zero {
+						r.logger.Debug("Zero detected before newline")
 						return io.EOF
 					}
 				}
@@ -294,8 +302,10 @@ func (r *LineReader) skipUntilNewLine() (int, error) {
 			// Check if null character before newLine
 			if idx_zero != -1 {
 				if idx == -1 {
+					r.logger.Debug("Zero detected before newline")
 					return skipped, io.EOF
 				} else if idx > idx_zero {
+					r.logger.Debug("Zero detected before newline")
 					return skipped, io.EOF
 				}
 			}
